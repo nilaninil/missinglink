@@ -1,0 +1,4 @@
+# Optional stronger visual encoder (CLIP ViT-B/32). ~600 MB of downloads.
+# Without it MissingLink uses its built-in fallback encoder automatically.
+torch
+open_clip_torch>=2.24

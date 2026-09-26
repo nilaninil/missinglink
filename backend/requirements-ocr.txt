@@ -1,0 +1,2 @@
+# Local OCR for the document scanner (optional but recommended; installed by setup scripts).
+rapidocr-onnxruntime>=1.3

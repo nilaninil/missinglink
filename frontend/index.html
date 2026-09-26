@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MissingLink — investigator console</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231f2b37'/%3E%3Cpath d='M9 20a5 5 0 0 1 0-7l3-3a5 5 0 0 1 7 0M23 12a5 5 0 0 1 0 7l-3 3a5 5 0 0 1-7 0' stroke='%2350c2b5' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#/dashboard" aria-label="MissingLink home">
+        <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><path d="M9 20a5 5 0 0 1 0-7l3-3a5 5 0 0 1 7 0M23 12a5 5 0 0 1 0 7l-3 3a5 5 0 0 1-7 0" stroke="#50c2b5" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+        <span><b>MissingLink</b><small>Investigator console</small></span>
+      </a>
+      <nav id="nav"></nav>
+      <div class="side-foot">
+        <button class="btn-demo" id="sideDemo">Run demo investigation</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Open navigation">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="top-left">
+          <button class="mode-pill" id="modePill" title="Click to simulate going offline / online">Checking…</button>
+          <span class="demo-badge" title="All people, photos and documents are procedurally generated">Synthetic demo data</span>
+        </div>
+        <div class="top-right">
+          <span class="encoder" id="encoderName"></span>
+          <div id="userBadgeArea"></div>
+          <label class="role">
+            <span>Viewing as</span>
+            <select id="roleSelect">
+              <option value="investigator">Investigator</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="volunteer">Field volunteer</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <div class="offline-banner" id="offlineBanner" hidden>
+        Offline Mode Active — Core matching is running locally. New records are kept as Pending Sync.
+      </div>
+
+      <main id="view" tabindex="-1"></main>
+
+      <footer class="footer">
+        MissingLink is an investigative decision-support tool. Final identification must be performed by an
+        authorized investigator. Demo uses synthetic data only.
+      </footer>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div class="modal-root" id="modalRoot"></div>
+
+  <script src="js/core.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/camera.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/case_pages.js"></script>
+  <script src="js/scan_page.js"></script>
+  <script src="js/tools_pages.js"></script>
+  <script src="js/demo_page.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

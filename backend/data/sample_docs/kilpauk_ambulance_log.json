@@ -1,0 +1,14 @@
+{
+  "document_type": "hospital_record",
+  "org_id": 4,
+  "name": null,
+  "age_min": 19,
+  "age_max": 23,
+  "gender": "Male",
+  "locality": "Kilpauk",
+  "observed_time": "19:15",
+  "pickup_locality": "Anna Nagar",
+  "pickup_time": "18:55",
+  "clothing": "Blue shirt, dark trousers",
+  "linked_record_id": "FR-0003"
+}

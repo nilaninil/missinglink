@@ -1,0 +1,11 @@
+{
+  "document_type": "shelter_record",
+  "org_id": 2,
+  "age_min": 28,
+  "age_max": 32,
+  "gender": "Male",
+  "locality": "Anna Nagar",
+  "observed_time": "19:40",
+  "clothing": "Blue shirt, grey trousers",
+  "linked_record_id": "FR-0001"
+}
