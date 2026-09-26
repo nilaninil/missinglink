@@ -3,7 +3,12 @@ import os
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = Path(os.environ.get("MISSINGLINK_DATA", BACKEND_DIR / "data"))
+is_vercel = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if is_vercel:
+    DATA_DIR = Path(os.environ.get("MISSINGLINK_DATA", "/tmp/missinglink_data"))
+else:
+    DATA_DIR = Path(os.environ.get("MISSINGLINK_DATA", BACKEND_DIR / "data"))
+
 MODELS_DIR = BACKEND_DIR / "models"
 MEDIA_DIR = DATA_DIR / "media"
 EMB_DIR = DATA_DIR / "embeddings"
@@ -34,6 +39,18 @@ os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 os.environ.setdefault("HF_HOME", str(MODELS_DIR / "hf"))
 
+# If on Vercel and source data exists, copy initial data to /tmp
+if is_vercel and not DATA_DIR.exists() and (BACKEND_DIR / "data").exists():
+    try:
+        import shutil
+        shutil.copytree(str(BACKEND_DIR / "data"), str(DATA_DIR))
+    except Exception:
+        pass
+
 for d in (DATA_DIR, MEDIA_DIR, EMB_DIR, SAMPLE_CCTV_DIR, SAMPLE_DOCS_DIR, MODELS_DIR,
           MEDIA_DIR / "scans", MEDIA_DIR / "uploads", MEDIA_DIR / "crops"):
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+

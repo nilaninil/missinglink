@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "/frontend/uploads/:path*"
+    },
+    {
+      "source": "/media/:path*",
+      "destination": "/backend/data/media/:path*"
+    },
+    {
+      "source": "/samples/docs/:path*",
+      "destination": "/backend/data/sample_docs/:path*"
+    },
+    {
+      "source": "/samples/scans/:path*",
+      "destination": "/backend/data/sample_scans/:path*"
+    },
+    {
+      "source": "/js/:path*",
+      "destination": "/frontend/js/:path*"
+    },
+    {
+      "source": "/styles.css",
+      "destination": "/frontend/styles.css"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/((?!api|uploads|media|samples|js|styles\\.css).*)",
+      "destination": "/frontend/index.html"
+    }
+  ]
+}
