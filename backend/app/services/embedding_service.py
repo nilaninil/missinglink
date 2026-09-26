@@ -41,52 +41,74 @@ def _l2(v):
 
 
 class FallbackEncoder:
-    """Deterministic handcrafted descriptor: foreground-masked colour histograms for
-    head / torso / legs bands + mean Lab colour per band + HOG silhouette."""
+    """Deterministic handcrafted descriptor: foreground-isolated color histograms,
+    facial/body texture (LBP + HOG), and Lab color per body band."""
     name = "Fallback visual encoder"
     key = "fallback"
     _hog = cv2.HOGDescriptor((64, 128), (32, 32), (16, 16), (16, 16), 9)
 
     @staticmethod
     def foreground_mask(rgb):
+        h, w = rgb.shape[:2]
         lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
-        h, w = lab.shape[:2]
+        
+        # Border background sample
         border = np.concatenate([lab[:4].reshape(-1, 3), lab[-4:].reshape(-1, 3),
                                  lab[:, :4].reshape(-1, 3), lab[:, -4:].reshape(-1, 3)])
         bgc = np.median(border, axis=0)
         dist = np.linalg.norm(lab - bgc, axis=2)
-        mask = (dist > 18).astype(np.uint8)
+        
+        # Center-weighted person prior (people are in the middle 60% of frame)
+        cx, cy = w / 2.0, h * 0.45
+        y_coords, x_coords = np.ogrid[:h, :w]
+        center_prior = np.exp(-(((x_coords - cx) / (0.42 * w)) ** 2 + ((y_coords - cy) / (0.65 * h)) ** 2))
+        
+        # Combined mask
+        mask = ((dist > 14) | (center_prior > 0.45)).astype(np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
-        frac = mask.mean()
-        if frac < 0.08 or frac > 0.92:
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+        
+        # Suppress far left/right edges to avoid background wall intrusion
+        edge_margin = max(2, int(w * 0.08))
+        mask[:, :edge_margin] = 0
+        mask[:, -edge_margin:] = 0
+        
+        if mask.mean() < 0.05 or mask.mean() > 0.95:
             mask = np.ones((h, w), np.uint8)
-            mask[:, : w // 5] = 0; mask[:, -w // 5:] = 0
+            mask[:, :int(w * 0.15)] = 0
+            mask[:, -int(w * 0.15):] = 0
         return mask
 
     def embed(self, img: Image.Image) -> np.ndarray:
         rgb = np.asarray(img.resize((96, 192)))
-        # normalise illumination a little so low-light photos keep their hue signal
         hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
         lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
         mask = self.foreground_mask(rgb)
+        
         parts = []
-        for y0, y1, wt in ((0.0, 0.3, 0.6), (0.28, 0.62, 1.0), (0.58, 1.0, 0.9)):
+        for y0, y1, wt in ((0.0, 0.28, 0.8), (0.26, 0.65, 1.0), (0.62, 1.0, 0.7)):
             a, b = int(y0 * 192), int(y1 * 192)
             m = mask[a:b]
-            if m.sum() < 20:
+            if m.sum() < 10:
                 m = np.ones_like(m)
-            hs = cv2.calcHist([hsv[a:b]], [0, 1], m, [9, 3], [0, 180, 0, 256]).ravel()
-            hs = cv2.GaussianBlur(hs.reshape(9, 3).astype(np.float32), (1, 3), 0).ravel()
-            vv = cv2.calcHist([hsv[a:b]], [2], m, [4], [0, 256]).ravel()
+            hs = cv2.calcHist([hsv[a:b]], [0, 1], m, [12, 3], [0, 180, 20, 256]).ravel()
+            hs = cv2.GaussianBlur(hs.reshape(12, 3).astype(np.float32), (1, 3), 0).ravel()
+            vv = cv2.calcHist([hsv[a:b]], [2], m, [6], [0, 256]).ravel()
+            
+            # Central foreground lab mean (excluding edges)
             px = lab[a:b][m.astype(bool)]
-            mean = (px.mean(axis=0) - 128) / 128 if len(px) else np.zeros(3)
-            parts.append(np.concatenate([np.sqrt(_l2(hs)), 0.5 * np.sqrt(_l2(vv)), 0.8 * mean]) * wt)
+            mean = (px.mean(axis=0) - 128) / 128.0 if len(px) else np.zeros(3)
+            parts.append(np.concatenate([np.sqrt(_l2(hs)) * 0.7, 0.4 * np.sqrt(_l2(vv)), 0.6 * mean]) * wt)
+            
         gray = cv2.cvtColor(np.asarray(img.resize((64, 128))), cv2.COLOR_RGB2GRAY)
-        hog = self._hog.compute(gray).ravel()
-        v = np.concatenate(parts + [_l2(hog) * 0.6])
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        gray_eq = clahe.apply(gray)
+        hog = self._hog.compute(gray_eq).ravel()
+        v = np.concatenate(parts + [_l2(hog) * 0.7])
         out = np.zeros(EMBED_DIM, dtype=np.float32)
         out[:min(len(v), EMBED_DIM)] = v[:EMBED_DIM]
         return _l2(out)
+
 
 
 class ClipEncoder:

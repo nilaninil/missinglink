@@ -44,3 +44,5 @@ htmlcov/
 # Antigravity & Scratch
 .system_generated/
 *.log
+
+.vercel
